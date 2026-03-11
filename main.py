@@ -11,7 +11,7 @@ import flet
 class Default:
     if sys.platform == "ios":
         view_width = 375
-    elif sys.platform == "android":
+    elif sys.platform == "android" or "linux":
         view_width = 360
     elif sys.platform == "win32": # Hot Reload Test
         view_width = 360
@@ -24,7 +24,7 @@ class Default:
     data_height = data_width / 2
 
     history_width = view_width
-    history_height = view_width / 12
+    history_height = view_width / 10
 
     tail_btn_size = view_width / 3.3 # Width, Height
 
@@ -39,7 +39,6 @@ def image_container(event, src:str, size=Default.image_size):
         height=size,
         bgcolor=flet.Colors.BLACK,
         shape=flet.BoxShape.CIRCLE, # 원형 1
-        align=flet.Alignment.CENTER, # 정렬
         on_click=event,
         image=flet.DecorationImage( # 컨테이너에 이미지를 추가하기위한 옵션
             src=src,
@@ -80,11 +79,20 @@ def tail_btn_container(text, event, size=Default.tail_btn_size):
         border = Default.container_border,
     )
 
-def click_print(e, index):
-    print(index)
 
 def main(page: flet.Page):
-    page.theme_mode = flet.ThemeMode.LIGHT
+    print(page.width)
+    Default.view_width = page.width if page.width > 0 else 360
+    if Default.view_width > 360:
+        Default.view_width = 360
+    print(Default.view_width)
+
+    page.theme_mode = flet.ThemeMode.SYSTEM
+
+    def click_print(e, index):
+        print(index)
+        if page.appbar.page:
+            page.appbar.title.content = index
 
     page.appbar = flet.AppBar(
         leading=flet.IconButton(flet.Icons.MENU, on_click=lambda e: click_print(e,"Menu")), # 좌측 메뉴
@@ -95,6 +103,7 @@ def main(page: flet.Page):
 
     test = flet.Column(
         scroll=flet.ScrollMode.AUTO,
+        horizontal_alignment=flet.MainAxisAlignment.CENTER,
         expand=True,
         controls=[
             flet.Container(height=5),
@@ -113,7 +122,7 @@ def main(page: flet.Page):
             flet.Row(
                 alignment=flet.MainAxisAlignment.CENTER,
                 controls=[
-                    history_container(text="기록요약",  event=lambda e: click_print(e,"기록요약")),
+                    history_container(text=f"OS: {sys.platform}",  event=lambda e: click_print(e,"기록요약")),
                 ]
             ),
             flet.Container(height=10),
@@ -140,18 +149,19 @@ def main(page: flet.Page):
         align=flet.Alignment.CENTER,
         width=Default.view_width,
         expand=True,
-        controls=[flet.Container(
-            # bgcolor=flet.Colors.BROWN,
-            expand=True,
-            content=test
-        )]
+        controls=[
+            flet.Container(
+                # bgcolor=flet.Colors.BROWN,
+                expand=True,
+                content=test
+            ),
+        ]
     )
 
-    # page.floating_action_button = flet.FloatingActionButton(
-    #     icon=flet.Icons.ADD,
-    #     on_click=lambda _: print("Nyang!"),
-    #     bgcolor=flet.Colors.BLUE_400,
-    # )
+    page.floating_action_button = flet.FloatingActionButton(
+        icon=flet.Icons.ADD,
+        on_click=lambda _: print("Nyang!"),
+    )
 
     page.navigation_bar=flet.NavigationBar(
         destinations=[
@@ -163,6 +173,11 @@ def main(page: flet.Page):
         ]
     )
     page.add(content)
+
+# build test
+# app name = project name
+# if __name__ == "__main__":
+#     flet.app(target=main, assets_dir="assets")
 
 if __name__ == "__main__":
     import webbrowser, os
