@@ -1,6 +1,8 @@
 import sys
 
 import flet
+from flet.controls.border_radius import horizontal
+
 
 # pip install watchfiles "flet==0.81.0"
 # flet build apk --split-per-abi
@@ -26,6 +28,9 @@ class Default:
     history_width = view_width
     history_height = view_width / 10
 
+    side_width = view_width / 3
+    side_height = view_width / 10
+
     tail_btn_size = view_width / 3.3 # Width, Height
 
     text_size = 20
@@ -46,15 +51,32 @@ def image_container(event, src:str, size=Default.image_size):
         ),
     )
 
+def side_container(text, event, width=Default.side_width, height=Default.side_height):
+    return flet.Container(
+        content=flet.Text(text, size=Default.text_size, weight=Default.text_weight),
+        alignment=flet.Alignment.CENTER,
+        on_click=event,
+        width=width,
+        height=height,
+        border_radius=10,
+        border = Default.container_border,
+    )
+
 def data_container(text, event, width=Default.data_width, height=Default.data_height):
     return flet.Container(
         width=width,
         height=height,
-        content=flet.Text(text, size=Default.text_size, weight=Default.text_weight),
+        padding=15,
+        content=flet.Column(
+            horizontal_alignment=flet.MainAxisAlignment.CENTER,
+            controls=[
+            flet.Text(text, size=Default.text_size, weight=Default.text_weight),
+            flet.Container(width=width/1.5, height=height/10, border_radius=10, border=Default.container_border)
+        ]),
         alignment=flet.Alignment.CENTER,
         border_radius=10,
         on_click=event,
-        border = Default.container_border,
+        border=Default.container_border,
     )
 
 def history_container(text, event, width=Default.history_width, height=Default.history_height):
@@ -88,8 +110,11 @@ def main(page: flet.Page):
     print(Default.view_width)
 
     page.theme_mode = flet.ThemeMode.SYSTEM
+    page.horizontal_alignment = flet.CrossAxisAlignment.CENTER
 
-    def click_print(e, index):
+    def click_print(e, index=None):
+        if not index:
+            index = f"Nav Bar Page: {e.control.selected_index}"
         print(index)
         if page.appbar.page:
             page.appbar.title.content = index
@@ -107,9 +132,22 @@ def main(page: flet.Page):
         expand=True,
         controls=[
             flet.Container(height=5),
-            image_container(
-                event=lambda e: click_print(e,"Images"),
-                src="https://content.lyka.com.au/f/1016262/1104x676/e36872ce32/beagle.png"
+            flet.Row(
+                controls=[
+                    image_container(
+                        event=lambda e: click_print(e,"Images"),
+                        src="https://content.lyka.com.au/f/1016262/1104x676/e36872ce32/beagle.png"
+                    ),
+                    flet.Column(
+                        horizontal_alignment=flet.MainAxisAlignment.CENTER,
+                        expand=True,
+                        controls=[
+                            side_container("뽀찌", event=lambda e: click_print(e, "이름")),
+                            side_container("살쪘어요..", event=lambda e: click_print(e, "상태값")),
+                            side_container("3짤", event=lambda e: click_print(e, "나이")),
+                        ]
+                    )
+                ]
             ),
             flet.Container(height=10),
             flet.Row(
@@ -146,7 +184,6 @@ def main(page: flet.Page):
     )
 
     content = flet.Row(
-        align=flet.Alignment.CENTER,
         width=Default.view_width,
         expand=True,
         controls=[
@@ -164,6 +201,7 @@ def main(page: flet.Page):
     )
 
     page.navigation_bar=flet.NavigationBar(
+        on_change=lambda e: click_print(e),
         destinations=[
             flet.NavigationBarDestination(label="Home", icon=flet.Icons.HOME),
             flet.NavigationBarDestination(label="log", icon=flet.Icons.HISTORY),
@@ -172,6 +210,7 @@ def main(page: flet.Page):
             flet.NavigationBarDestination(label="My Page", icon=flet.Icons.EMOJI_EMOTIONS),
         ]
     )
+
     page.add(content)
 
 # build test
